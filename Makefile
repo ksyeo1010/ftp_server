@@ -7,6 +7,7 @@ ifeq (run,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
+# Makefile based on https://stackoverflow.com/questions/20090616/makefiles-to-include-multiple-headers-in-c
 #The following lines contain the generic build options
 BIN_NAME=CSftp
 SRC_DIR=src
