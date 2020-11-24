@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -11,14 +12,13 @@
 #include "ftp.h"
 
 #define NUM_CONNECTIONS 4
-
-typedef struct sockaddr_in sin_t;
+#define SIN_SIZE sizeof(struct sockaddr_in)
 
 int main(int argc, char **argv) {
 
     int value;
     int socketd;
-    sin_t *address;
+    struct sockaddr_in address;
     in_port_t port;
     
     // Check the command line arguments
@@ -43,17 +43,17 @@ int main(int argc, char **argv) {
 
     // check for reuse
     value = 1;
-    if (setsockopt(socketd, SOL_SOCKET, SO_REUSEADDR, &value, sizeof (int)) != 0) {
+    if (setsockopt(socketd, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int)) != 0) {
         perror("Failed to set the socket option");
         exit(-1);
     }
 
     // bind the socket to port
-    address = (sin_t *) calloc(0, sizeof (sin_t));
-    address->sin_family = AF_INET;
-    address->sin_port = htons(port);
-    address->sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    if (bind(socketd, (const struct sockaddr *) address, sizeof(sin_t)) != 0) {
+    bzero(&address, 0);
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    if (bind(socketd, (const struct sockaddr *) &address, SIN_SIZE) != 0) {
         perror("Failed to bind the socket");
         exit(-1);
     }
@@ -64,18 +64,14 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    // ca length
-    int clientd;
-    sin_t *client_address = calloc(0, sizeof(sin_t));
-    socklen_t *ca_length = (socklen_t *) sizeof(sin_t);
-
-    pthread_t thread;
-
     while (1) {
         // accept connection
+        struct sockaddr_in client_address;
+        socklen_t ca_length = SIN_SIZE;
+
         printf("Waiting on port %d.\n", port);
 
-        clientd = accept(socketd, (struct sockaddr *) client_address, ca_length);
+        int clientd = accept(socketd, (struct sockaddr *) &client_address, &ca_length);
 
         if (clientd < 0) {
             perror("Failed to accept the client connection");
@@ -83,10 +79,14 @@ int main(int argc, char **argv) {
         }
 
         printf("Accepted the client connection from %s:%d.\n", 
-            inet_ntoa(client_address->sin_addr), ntohs(client_address->sin_port));
+            inet_ntoa(client_address.sin_addr), ntohs(client_address.sin_port));
+
+        
+        // create threads
+        pthread_t thread;    
 
         // generate thread
-        if (pthread_create(&thread, NULL, interact, ca_length) != 0) {
+        if (pthread_create(&thread, NULL, interact, &clientd) != 0) {
             perror("Failed to create thread");
             continue;
         }

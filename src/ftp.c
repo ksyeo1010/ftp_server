@@ -7,19 +7,19 @@
 
 
 void *interact(void *args) {
-    int clientd;
-    char buffer[BUFFER_SIZE];
-    ssize_t length;
-
     // set clientd
-    clientd = *(int *) args;
+    int clientd = *(int *) args;
+
+    // the buffer
+    char buffer[BUFFER_SIZE];
 
     while (1) {
         // reset buffer
         bzero(buffer, BUFFER_SIZE);
 
         // receive message
-        length = recv(clientd, buffer, BUFFER_SIZE, 0);
+        ssize_t length = recv(clientd, buffer, BUFFER_SIZE, 0);
+
         if (length < 0) {
             perror("Failed to read from socket.");
             break;
