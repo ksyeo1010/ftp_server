@@ -8,13 +8,20 @@
             "name": "a3",
             "type": "cppdbg",
             "request": "launch",
-            "program": "enter program name, for example ${workspaceFolder}/a.out",
+            "program": "${workspaceFolder}/CSftp",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
-            "MIMode": "lldb"
+            "preLaunchTask": "make",
+            "targetArchitecture": "x64",
+            "logging": {
+                "moduleLoad": false
+            },
+            "osx": {
+                "MIMode": "lldb"
+            }
         }
     ]
 }

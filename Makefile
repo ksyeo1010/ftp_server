@@ -7,16 +7,35 @@ ifeq (run,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
+#The following lines contain the generic build options
+BIN_NAME=CSftp
+SRC_DIR=src
+INC_DIR=include
+OBJ_DIR=obj
+CC=gcc
+CPPFLAGS=-I$(INC_DIR)
+CFLAGS=-g -Werror-implicit-function-declaration
 
-MAKE = make
-COMPILE=compile
-EXE=CSftp
+#List all the .o files here that need to be linked
+SRCS=$(wildcard $(SRC_DIR)/*.c)
+OBJS=$(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 
-all:
-	cd $(COMPILE); $(MAKE) all
+all: $(BIN_NAME)
+
+$(BIN_NAME): $(OBJS) 
+	$(CC) -o $@ $^
 
 clean:
-	cd $(COMPILE); $(MAKE) clean
+	rm -f $(OBJ_DIR)/*.o
+	rm -f $(BIN_NAME)
 
-run:
-	cd $(COMPILE); ./$(EXE) $(RUN_ARGS)
+.PHONY: run
+run: $(BIN_NAME)  
+	./$(BIN_NAME) $(RUN_ARGS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+# usage.o: $(SRC_DIR)/usage.c $(INC_DIR)/usage.h
+# dir.o: $(SRC_DIR)/dir.c $(INC_DIR)/dir.h
+# CSftp.o: $(SRC_DIR)/CSftp.c $(INC_DIR)/dir.h $(INC_DIR)/usage.h
