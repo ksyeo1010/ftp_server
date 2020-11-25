@@ -11,7 +11,6 @@
 #include "usage.h"
 #include "ftp.h"
 
-#define NUM_CONNECTIONS 4
 #define SIN_SIZE sizeof(struct sockaddr_in)
 
 int main(int argc, char **argv) {
@@ -49,7 +48,7 @@ int main(int argc, char **argv) {
     }
 
     // bind the socket to port
-    bzero(&address, 0);
+    bzero(&address, SIN_SIZE);
     address.sin_family = AF_INET;
     address.sin_port = htons(port);
     address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);

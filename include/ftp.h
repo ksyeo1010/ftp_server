@@ -1,9 +1,14 @@
 #ifndef _FTPH__
-
 #define _FTPH__
 
-#define BUFFER_SIZE 1024
+#define NUM_CONNECTIONS 4
 
-extern void *interact(void* args);
+/**
+ * @brief Interacts with a client.
+ * 
+ * @param {args} The pointer to the clientd number.
+ * @returns NULL
+ */
+extern void *interact(void *args);
 
 #endif

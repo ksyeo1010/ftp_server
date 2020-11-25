@@ -1,43 +1,74 @@
-#include <unistd.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include "ftp.h"
+#include "command.h"
 
+char root[BUFFER_SIZE] = "";
 
+void handleMessage(char *buffer, cs_t *conn);
+void stringUpr(char *s);
+
+/////////////////////////////////////////////////////////////////////////////////
 void *interact(void *args) {
     // set clientd
     int clientd = *(int *) args;
 
-    // the buffer
-    char buffer[BUFFER_SIZE];
+    /* Set some initial states of our ftp server */
 
-    while (1) {
-        // reset buffer
-        bzero(buffer, BUFFER_SIZE);
+    // the receive buffer
+    char r_buffer[BUFFER_SIZE];
 
-        // receive message
-        ssize_t length = recv(clientd, buffer, BUFFER_SIZE, 0);
+    // the connection state
+    cs_t conn = {
+        NOT_AUTHENTICATED,      // auth
+        SUCCESS,                // state
+        {ASCII, NON_PRINT},     // type
+        '\0'                      // send buffer
+    };
 
-        if (length < 0) {
-            perror("Failed to read from socket.");
-            break;
-        }
+    // save out working directory;
+    if (getcwd(root, BUFFER_SIZE) == NULL) {
+        printf("Error while getting current directory.\n");
+        close(clientd);
+        return NULL;
+    }
 
-        if (length == 0) {
-            printf("EOF\n");
-            break;
-        }
+    // initial message
+    conn.s_length = snprintf(conn.s_buffer, BUFFER_SIZE, RC220);
+    if (send(clientd, conn.s_buffer, conn.s_length, 0) != conn.s_length) {
+        perror("Failed to send to the socket");
+    } else {
+        while (1) {
+            // reset buffer
+            bzero(r_buffer, BUFFER_SIZE);
 
-        printf("Received message: %s.\n", buffer);
+            // receive message
+            ssize_t length = recv(clientd, r_buffer, BUFFER_SIZE, 0);
 
-        // send something back
-        length = snprintf(buffer, BUFFER_SIZE, "Server: %s\r\n", "Hello");
+            if (length < 0) {
+                perror("Failed to read from socket");
+                break;
+            }
 
-        if (send(clientd, buffer, length, 0) != length) {
-            perror("Failed to send to the socket");
-            break;
+            if (length == 0) {
+                printf("EOF\n");
+                break;
+            }
+
+            // handle message
+            handleMessage(r_buffer, &conn);
+
+            // send back
+            if (send(clientd, conn.s_buffer, conn.s_length, 0) != conn.s_length) {
+                perror("Failed to send to the socket");
+                break;
+            }
+
+            if (conn.state == CLOSING) break;
         }
     }
 
@@ -45,4 +76,52 @@ void *interact(void *args) {
     close(clientd);
 
     return NULL;
+}
+
+void handleMessage(char *buffer, cs_t *conn) {
+    char dup[BUFFER_SIZE];
+    strcpy(dup, buffer);
+
+    char *tok = strtok(dup, DELIM);
+    stringUpr(tok);
+
+    if (strcmp(tok, USER) == 0) {
+        user(conn);
+    } else {
+        // if not authenticated
+        if (!conn->auth) {
+            conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC530);
+        } else {
+            if (strcmp(tok, QUIT) == 0) {
+                quit(conn);
+            } else if (strcmp(tok,  CWD) == 0) {
+                cwd(conn);
+            } else if (strcmp(tok, CDUP) == 0) {
+                cdup(conn);                
+            } else if (strcmp(tok, TYPE) == 0) {
+                type(conn);  
+            } else if (strcmp(tok, MODE) == 0) {
+                mode(conn);  
+            } else if (strcmp(tok, STRU) == 0) {
+                stru(conn);  
+            } else if (strcmp(tok, RETR) == 0) {
+                retr(conn);  
+            } else if (strcmp(tok, PASV) == 0) {
+                pasv(conn);  
+            } else if (strcmp(tok, NLST) == 0) {
+                nlst(conn);  
+            } else {
+                // command not defined
+                conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC500);
+            }
+        }
+    }
+}
+
+void stringUpr(char *s) {
+    int i = 0;
+    while (s[i] != '\0') {
+        s[i] = toupper((unsigned char) s[i]);
+        i++;
+    }
 }
