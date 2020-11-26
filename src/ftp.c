@@ -27,7 +27,13 @@ void *interact(void *args) {
         NOT_AUTHENTICATED,      // auth
         SUCCESS,                // state
         {ASCII, NON_PRINT},     // type
-        '\0'                      // send buffer
+        STREAM,                 // mode
+        clientd,                // clientd
+        -1,                     // pasv_socketd
+        -1,                     // pasv_clientd
+        0,                      // s_buf length
+        '\0',                   // send buffer
+        0            // pthread
     };
 
     // save out working directory;
@@ -73,6 +79,25 @@ void *interact(void *args) {
     }
 
     // close connection
+    close(clientd);
+
+    return NULL;
+}
+
+void *pasv_interact(void *args) {
+    // set clientd
+    int clientd = *(int *) args;
+
+    char r_buffer[BUFFER_SIZE];
+
+    int length;
+
+    length = snprintf(r_buffer, BUFFER_SIZE, "Testing.\r\n");
+
+    if (send(clientd, r_buffer, length, 0) != length) {
+        perror("Failed to send to the socket");
+    }
+
     close(clientd);
 
     return NULL;

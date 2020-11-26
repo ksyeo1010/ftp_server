@@ -19,6 +19,12 @@
 #define TELNET              'T'
 #define ASA                 'C'
 
+/* Modes */
+#define STREAM              'S'
+
+/* Structures */
+#define FILE                'F'
+
 /* Buffer size */
 #define BUFFER_SIZE         1024
 
@@ -38,12 +44,19 @@
 #define NLST                "NLST"
 
 /* REPLY CODES */
+#define RC150               "150 File status okay; about to open data connection.\r\n"
 #define RC200               "200 Command okay.\r\n"
 #define RC220               "220 Welcome.\r\n"
 #define RC221               "221 Service closing control connection.\r\n"
+#define RC226               "226 Closing data connection. Requested file action successful.\r\n"
+#define RC227               "227 Entering Passive Mode (%i,%i,%i,%i,%i,%i).\r\n"
 #define RC230               "230 User logged in, proceed.\r\n"
 #define RC250               "250 Requested file action okay, completed.\r\n"
 #define RC332               "332 Need account for login.\r\n"
+#define RC421               "421 Service not available, closing control connection.\r\n"
+#define RC425               "425 Can't open data connection.\r\n"
+#define RC426               "426 Connection closed; transfer aborted.\r\n"
+#define RC451               "451 Requested action aborted: local error in processing.\r\n"
 #define RC500               "500 Syntax error, command unrecognized.\r\n"
 #define RC501               "501 Syntax error in parameters or arguments.\r\n"
 #define RC504               "504 Command not implemented for that parameter.\r\n"
@@ -62,9 +75,19 @@ typedef struct connection_state {
     int auth;
     int state;
     struct rep_type rep;
+    char mode;
+    int clientd;
+    int pasv_socketd;
+    int pasv_clientd;
     int s_length;
     char s_buffer[1024];
+    void *pthread;
 } cs_t;
+
+typedef struct pasv_arg {
+    int socketd;
+    cs_t *conn;
+} pasv_arg_t;
 
 extern char root[];
 

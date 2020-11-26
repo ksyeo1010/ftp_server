@@ -1,23 +1,14 @@
 #include <arpa/inet.h>
-#include <netinet/in.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 
-#include "dir.h"
 #include "usage.h"
+#include "server.h"
 #include "ftp.h"
 
-#define SIN_SIZE sizeof(struct sockaddr_in)
-
 int main(int argc, char **argv) {
-
-    int value;
-    int socketd;
-    struct sockaddr_in address;
     in_port_t port;
     
     // Check the command line arguments
@@ -33,42 +24,15 @@ int main(int argc, char **argv) {
         exit(-1);
     }
 
-    // create socket
-    socketd = socket(PF_INET, SOCK_STREAM, 0);
-    if (socketd < 0) {
-        perror("Failed to create a socket");
-        exit(-1);
-    }
+    // create socket on port
+    int socketd = create_socket(port);
 
-    // check for reuse
-    value = 1;
-    if (setsockopt(socketd, SOL_SOCKET, SO_REUSEADDR, &value, sizeof(int)) != 0) {
-        perror("Failed to set the socket option");
-        exit(-1);
-    }
-
-    // bind the socket to port
-    bzero(&address, SIN_SIZE);
-    address.sin_family = AF_INET;
-    address.sin_port = htons(port);
-    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-    if (bind(socketd, (const struct sockaddr *) &address, SIN_SIZE) != 0) {
-        perror("Failed to bind the socket");
-        exit(-1);
-    }
-    
-    // set socket to listen to connections
-    if (listen(socketd, NUM_CONNECTIONS) != 0) {
-        perror("Failed to listen to connections");
-        exit(-1);
-    }
+    printf("Waiting on port %d.\n", port);
 
     while (1) {
         // accept connection
         struct sockaddr_in client_address;
         socklen_t ca_length = SIN_SIZE;
-
-        printf("Waiting on port %d.\n", port);
 
         int clientd = accept(socketd, (struct sockaddr *) &client_address, &ca_length);
 

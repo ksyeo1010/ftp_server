@@ -1,8 +1,6 @@
 #ifndef _FTPH__
 #define _FTPH__
 
-#define NUM_CONNECTIONS 4
-
 /**
  * @brief Interacts with a client.
  * 
@@ -10,5 +8,7 @@
  * @returns NULL
  */
 extern void *interact(void *args);
+
+extern void *pasv_interact(void *args);
 
 #endif
