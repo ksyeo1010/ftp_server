@@ -58,6 +58,7 @@
 #define RC426               "426 Connection closed; transfer aborted.\r\n"
 #define RC451               "451 Requested action aborted: local error in processing.\r\n"
 #define RC500_S             "500 Syntax error, command unrecognized.\r\n"
+#define RC501               "501 Syntax error in parameters or arguments.\r\n"
 #define RC500               "500 %s\r\n"
 #define RC530               "530 Not logged in.\r\n"
 #define RC550_S             "550 Requested action not taken.\r\n"

@@ -346,6 +346,13 @@ void pasv(cs_t *conn) {
 
 /////////////////////////////////////////////////////////////////////////////////
 void nlst(cs_t *conn) {
+    // case with parameters
+    char *tok = strtok(NULL, DELIM);
+    if (tok != NULL) {
+        conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC501);
+        return;
+    }
+
     int length;
     char buffer[BUFFER_SIZE];
 
