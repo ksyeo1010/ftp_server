@@ -16,6 +16,7 @@ OBJ_DIR=obj
 CC=gcc
 CPPFLAGS=-I$(INC_DIR)
 CFLAGS=-g -Werror-implicit-function-declaration
+LIBS=-lpthread
 
 #List all the .o files here that need to be linked
 SRCS=$(wildcard $(SRC_DIR)/*.c)
@@ -35,7 +36,7 @@ run: $(BIN_NAME)
 	./$(BIN_NAME) $(RUN_ARGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) $(LIBS) -c $< -o $@
 
 # usage.o: $(SRC_DIR)/usage.c $(INC_DIR)/usage.h
 # dir.o: $(SRC_DIR)/dir.c $(INC_DIR)/dir.h
