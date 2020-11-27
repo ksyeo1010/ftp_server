@@ -7,7 +7,7 @@ ifeq (run,$(firstword $(MAKECMDGOALS)))
   $(eval $(RUN_ARGS):;@:)
 endif
 
-# Makefile based on https://stackoverflow.com/questions/20090616/makefiles-to-include-multiple-headers-in-c
+# Makefile based on https://stackoverflow.com/questions/30573481/path-include-and-src-directory-makefile
 #The following lines contain the generic build options
 BIN_NAME=CSftp
 SRC_DIR=src
@@ -25,7 +25,7 @@ OBJS=$(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 all: $(BIN_NAME)
 
 $(BIN_NAME): $(OBJS) 
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(LIBS)
 
 clean:
 	rm -f $(OBJ_DIR)/*.o
@@ -36,7 +36,7 @@ run: $(BIN_NAME)
 	./$(BIN_NAME) $(RUN_ARGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
-	$(CC) $(CPPFLAGS) $(CFLAGS) $(LIBS) -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
 
 # usage.o: $(SRC_DIR)/usage.c $(INC_DIR)/usage.h
 # dir.o: $(SRC_DIR)/dir.c $(INC_DIR)/dir.h
