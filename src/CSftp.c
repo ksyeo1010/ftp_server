@@ -3,10 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 #include "usage.h"
 #include "server.h"
 #include "ftp.h"
+
+/* Define root */
+char root[1024] = "";
 
 int main(int argc, char **argv) {
     in_port_t port;
@@ -21,6 +25,12 @@ int main(int argc, char **argv) {
     port = (in_port_t) strtoul(argv[1], NULL, 0);
     if (port < 1024 || port > 65535) {
         perror("Incorrect port number specified");
+        exit(-1);
+    }
+
+    // save out root directory;
+    if (getcwd(root, 1024) == NULL) {
+        printf("Error while getting current directory.\n");
         exit(-1);
     }
 

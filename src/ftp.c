@@ -7,7 +7,7 @@
 #include "ftp.h"
 #include "command.h"
 
-char root[BUFFER_SIZE] = "";
+/* Helper function declarations */
 
 void handleMessage(char *buffer, cs_t *conn);
 void stringUpr(char *s);
@@ -33,15 +33,12 @@ void *interact(void *args) {
         -1,                     // pasv_clientd
         0,                      // s_buf length
         '\0',                   // send buffer
-        0            // pthread
+        '\0',                   // set current directory to root
+        0                       // pthread
     };
 
-    // save out working directory;
-    if (getcwd(root, BUFFER_SIZE) == NULL) {
-        printf("Error while getting current directory.\n");
-        close(clientd);
-        return NULL;
-    }
+    // set root dir
+    strcpy(conn.dir, root);
 
     // initial message
     conn.s_length = snprintf(conn.s_buffer, BUFFER_SIZE, RC220);
@@ -84,42 +81,29 @@ void *interact(void *args) {
     return NULL;
 }
 
-void *pasv_interact(void *args) {
-    // set clientd
-    int clientd = *(int *) args;
-
-    char r_buffer[BUFFER_SIZE];
-
-    int length;
-
-    length = snprintf(r_buffer, BUFFER_SIZE, "Testing.\r\n");
-
-    if (send(clientd, r_buffer, length, 0) != length) {
-        perror("Failed to send to the socket");
-    }
-
-    close(clientd);
-
-    return NULL;
-}
-
+/**
+ * @brief Helper to detect which command to run.
+ * 
+ * @param {buffer} The message buffer.
+ * @param {conn} The connection state pointer.
+ */
 void handleMessage(char *buffer, cs_t *conn) {
     char dup[BUFFER_SIZE];
     strcpy(dup, buffer);
 
     char *tok = strtok(dup, DELIM);
-    stringUpr(tok);
+    stringUpr(tok); 
 
     if (strcmp(tok, USER) == 0) {
         user(conn);
+    } else if (strcmp(tok, QUIT) == 0) {
+        quit(conn);
     } else {
         // if not authenticated
         if (!conn->auth) {
             conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC530);
         } else {
-            if (strcmp(tok, QUIT) == 0) {
-                quit(conn);
-            } else if (strcmp(tok,  CWD) == 0) {
+            if (strcmp(tok,  CWD) == 0) {
                 cwd(conn);
             } else if (strcmp(tok, CDUP) == 0) {
                 cdup(conn);                
@@ -137,12 +121,17 @@ void handleMessage(char *buffer, cs_t *conn) {
                 nlst(conn);  
             } else {
                 // command not defined
-                conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC500);
+                conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC500_S);
             }
         }
     }
 }
 
+/**
+ * @brief Helper to change a string to upper case.
+ * 
+ * @param {s} Pointer to the start of the string.
+ */
 void stringUpr(char *s) {
     int i = 0;
     while (s[i] != '\0') {

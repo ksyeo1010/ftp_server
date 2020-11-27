@@ -3,3 +3,6 @@
 
 # ignore build file
 CSftp
+
+# ignore tmp
+tmp/
