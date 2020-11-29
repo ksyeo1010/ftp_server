@@ -145,4 +145,11 @@ extern void pasv(cs_t *conn);
  */
 extern void nlst(cs_t *conn);
 
+/**
+ * @brief Closes the pasv connection. Frees everything used.
+ * 
+ * @param {conn} The connection state of a client.
+ */
+void close_pasv(cs_t *conn);
+
 #endif

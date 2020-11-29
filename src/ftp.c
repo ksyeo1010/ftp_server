@@ -75,6 +75,9 @@ void *interact(void *args) {
         }
     }
 
+    // free up everything used by the user
+    close_pasv(&conn);
+
     // close connection
     close(clientd);
 

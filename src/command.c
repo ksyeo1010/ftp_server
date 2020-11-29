@@ -45,15 +45,9 @@ void user(cs_t *conn) {
 
 /////////////////////////////////////////////////////////////////////////////////
 void quit(cs_t *conn) {
+    // actual freeing done by ftp.c
     conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC221);
     conn->state = CLOSING;
-
-    if (conn->pthread != NULL) {
-        close(conn->pasv_clientd);
-        close(conn->pasv_socketd);
-        free(conn->pthread);
-        conn->pthread = NULL;
-    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -294,16 +288,17 @@ void pasv(cs_t *conn) {
 
     struct sockaddr_in client_addr;
 
+    // get client addr
+    if (getsockname(conn->clientd, (struct sockaddr *) &client_addr, &sin_len) < 0) {
+        conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC421);
+        return;
+    }
+
     // if our ip addr are null
     if (getifaddrs(&ifas) == -1) {
         conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC421);
         conn->state = CLOSING;
-        return;
-    }
-
-    // get client addr
-    if (getsockname(conn->clientd, (struct sockaddr *) &client_addr, &sin_len) < 0) {
-        conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC421);
+        freeifaddrs(ifas);
         return;
     }
 
@@ -325,10 +320,10 @@ void pasv(cs_t *conn) {
                 }
             }
         }
-
-        // free ifas
-        freeifaddrs(ifas);
     }
+
+    // free ifas
+    freeifaddrs(ifas);
 
     // close previous socket we are accepting at
     close_pasv(conn);
@@ -394,6 +389,7 @@ void nlst(cs_t *conn) {
     if (send(conn->clientd, buffer, length, 0) != length) {
         perror("Failed to send to the socket");
         conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC451);
+        close_pasv(conn);
         return;
     }
 
@@ -418,11 +414,7 @@ void nlst(cs_t *conn) {
     close_pasv(conn);
 }
 
-/**
- * @brief Closes the pasv connection. Frees everything used.
- * 
- * @param {conn} The connection state of a client.
- */
+/////////////////////////////////////////////////////////////////////////////////
 void close_pasv(cs_t *conn) {
     close(conn->pasv_clientd);
     close(conn->pasv_socketd);
