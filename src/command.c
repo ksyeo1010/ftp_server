@@ -216,7 +216,6 @@ void retr(cs_t *conn) {
     pFile = fopen(dir, "rb");
     if (pFile == NULL) {
         conn->s_length = snprintf(conn->s_buffer, BUFFER_SIZE, RC550, "File unavailable.");
-        fclose(pFile);
         return;
     }
 
@@ -416,10 +415,12 @@ void nlst(cs_t *conn) {
 
 /////////////////////////////////////////////////////////////////////////////////
 void close_pasv(cs_t *conn) {
-    close(conn->pasv_clientd);
-    close(conn->pasv_socketd);
-    free(conn->pthread);
-    conn->pthread = NULL;
+    if (conn->pasv_clientd != -1) close(conn->pasv_clientd);
+    if (conn->pasv_socketd != -1) close(conn->pasv_socketd);
+    if (conn->pthread != NULL) {
+        free(conn->pthread);
+        conn->pthread = NULL;
+    }
 }
 
 /**
