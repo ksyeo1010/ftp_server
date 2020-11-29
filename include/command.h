@@ -12,12 +12,8 @@
 #define NOT_AUTHENTICATED   0
 
 /* Representation states */
-#define NONE                'N'
 #define ASCII               'A'
 #define IMAGE               'I'
-#define NON_PRINT           'N'
-#define TELNET              'T'
-#define ASA                 'C'
 
 /* Modes */
 #define STREAM              'S'
@@ -77,7 +73,7 @@ struct rep_type {
 typedef struct connection_state {
     int auth;
     int state;
-    struct rep_type rep;
+    char type;
     char mode;
     int clientd;
     int pasv_socketd;

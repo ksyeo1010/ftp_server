@@ -26,14 +26,14 @@ void *interact(void *args) {
     cs_t conn = {
         NOT_AUTHENTICATED,      // auth
         SUCCESS,                // state
-        {ASCII, NON_PRINT},     // type
+        ASCII,                  // type
         STREAM,                 // mode
         clientd,                // clientd
         -1,                     // pasv_socketd
         -1,                     // pasv_clientd
         0,                      // s_buf length
         '\0',                   // send buffer
-        '\0',                   // set current directory to root
+        '\0',                   // current directory
         0                       // pthread
     };
 
